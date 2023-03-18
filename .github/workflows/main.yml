@@ -19,7 +19,7 @@ jobs:
         sudo mv ngrok /usr/local/bin
       
     - name: Start Prolog server
-      run: swipl server.pl &
+      run: swipl agentO.pl &
       
     - name: Start ngrok tunnel
       run: ./ngrok http 8000 > ngrok.log 2>&1 &
