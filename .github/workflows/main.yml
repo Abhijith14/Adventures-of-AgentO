@@ -1,0 +1,33 @@
+name: Prolog CI
+on:  
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Install Prolog
+      run: sudo apt-get install -y swi-prolog
+      
+    - name: Install ngrok
+      run: |
+        wget https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip
+        unzip ngrok-stable-linux-amd64.zip
+        chmod +x ngrok
+        sudo mv ngrok /usr/local/bin
+      
+    - name: Start Prolog server
+      run: swipl server.pl &
+      
+    - name: Start ngrok tunnel
+      run: ./ngrok http 8000 > ngrok.log 2>&1 &
+      env:
+        NGROK_AUTH_TOKEN: ${{ secrets.NGROK_AUTH_TOKEN }}
+        
+    - name: Wait for tunnel URL
+      run: |
+        until grep -q "Session Status" ngrok.log; do sleep 1; done
+        ngrok_url=$(curl -sS http://localhost:4040/api/tunnels | jq -r '.tunnels[0].public_url')
+        echo "Public URL: $ngrok_url"
